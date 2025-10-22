@@ -1,0 +1,9 @@
+FROM rust:1.81 as build
+WORKDIR /app
+COPY . .
+RUN cargo build --release
+
+FROM debian:stable-slim
+WORKDIR /app
+COPY --from=build /app/target/release/hypernode-miner /usr/local/bin/miner
+CMD ["/usr/local/bin/miner"]

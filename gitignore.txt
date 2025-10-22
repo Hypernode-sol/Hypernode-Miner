@@ -1,0 +1,12 @@
+.project
+.settings
+.classpath
+Makefile
+hypernode_miner
+CMakeCache.txt
+compat/
+CMakeFiles
+
+HYPERNODEPL/cmake_install\.cmake
+
+cmake_install\.cmake
