@@ -1,0 +1,36 @@
+# Build outputs
+.project
+.settings
+.classpath
+Makefile
+hypernode_miner
+hypernode_compiler
+*.o
+*.so
+*.dll
+*.exe
+
+# CMake
+CMakeCache.txt
+cmake_install.cmake
+CMakeFiles/
+HYPERNODEPL/cmake_install.cmake
+
+# Dependencies
+compat/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Work directory
+work/
+
+# AI instructions
+claude.md
+CLAUDE.md
