@@ -4,8 +4,8 @@
 
 The Hypernode Miner is the operator node that:
 - Collects local metrics (uptime, latency, throughput)
-- Signs performance reports
-- Submits metrics on-chain to the `metrics_registry` program on Solana
+- Registers node with hardware specifications on-chain
+- Submits performance data to the Hypernode programs on Solana
 - Performs mining operations using CPU/GPU
 
 ![C](https://img.shields.io/badge/Language-C-blue)
@@ -38,12 +38,12 @@ This miner integrates with the Hypernode ecosystem to:
 - **OpenCL**: For GPU acceleration (optional)
 - **Rust**: 1.77+ (stable)
 - **Solana CLI**: 1.18+
-- **Anchor**: 0.30+
+- **Anchor**: 0.31.0+
 
 ### Blockchain Requirements
 - Solana RPC endpoint (mainnet or devnet)
 - Operator keypair (Solana wallet)
-- Access to `metrics_registry` program
+- Access to Hypernode smart contracts (hypernode-nodes, hypernode-jobs, hypernode-staking)
 
 ---
 
@@ -90,9 +90,18 @@ cp .env.example .env
 
 Edit `.env` with your configuration:
 ```bash
-SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
+SOLANA_RPC_URL=https://api.devnet.solana.com
 OPERATOR_KEYPAIR=/path/to/your/keypair.json
-PROGRAM_METRICS_REGISTRY_ID=YourProgramIdHere
+
+# Hypernode Program IDs (Devnet)
+HYPERNODE_NODES_PROGRAM_ID=YourNodesProgramIdHere
+HYPERNODE_JOBS_PROGRAM_ID=YourJobsProgramIdHere
+HYPERNODE_STAKING_PROGRAM_ID=YourStakingProgramIdHere
+HYPERNODE_FACILITATOR_PROGRAM_ID=YourFacilitatorProgramIdHere
+
+# HYPER Token Mint
+HYPER_MINT_DEVNET=56jZUEMAhXxRu7Am3L2AkRRxNJb187zBbBQqnTf6jV75
+HYPER_MINT_MAINNET=92s9qna3djkMncZzkacyNQ38UKnNXZFh4Jgqe3Cmpump
 ```
 
 ### 4. Run the Miner
@@ -150,7 +159,11 @@ compile_dll.bat
 |----------|-------------|----------|---------|
 | `SOLANA_RPC_URL` | Solana RPC endpoint | Yes | - |
 | `OPERATOR_KEYPAIR` | Path to operator keypair | Yes | - |
-| `PROGRAM_METRICS_REGISTRY_ID` | Metrics registry program ID | Yes | - |
+| `HYPERNODE_NODES_PROGRAM_ID` | Node registry program ID | Yes | - |
+| `HYPERNODE_JOBS_PROGRAM_ID` | Job marketplace program ID | Yes | - |
+| `HYPERNODE_STAKING_PROGRAM_ID` | Staking program ID | No | - |
+| `HYPERNODE_FACILITATOR_PROGRAM_ID` | Payment facilitator program ID | No | - |
+| `HYPER_MINT_DEVNET` | HYPER token mint (devnet) | Yes | - |
 | `MINING_THREADS` | Number of CPU threads | No | Auto-detect |
 | `GPU_DEVICE` | GPU device index | No | 0 |
 | `LOG_LEVEL` | Logging verbosity | No | info |
@@ -196,6 +209,91 @@ Hypernode-Miner/
 ├── CMakeLists.txt          # CMake build configuration
 └── README.md               # This file
 ```
+
+---
+
+## 🔗 Hypernode Integration
+
+The miner integrates with Hypernode's Solana programs to participate in the decentralized GPU network.
+
+### Integration Flow
+
+```
+Miner → hypernode-nodes (register_node)
+      → hypernode-jobs (accept jobs, submit results)
+      → hypernode-staking (stake HYPER tokens)
+      → hypernode-facilitator (receive payments via x402)
+```
+
+### Core Program Functions
+
+#### 1. Node Registration (hypernode-nodes)
+
+Register your miner as a compute node:
+
+```rust
+// Called automatically on miner startup
+register_node {
+  hardware_specs: {
+    gpu_type: "NVIDIA RTX 3090",
+    vram: 24_000_000_000,  // 24 GB
+    cpu_cores: 16,
+    ram: 64_000_000_000     // 64 GB
+  },
+  wallet: operator_keypair,
+  stake_amount: 1000 HYPER
+}
+```
+
+#### 2. Job Execution (hypernode-jobs)
+
+Accept and execute compute jobs:
+
+```rust
+// Miner polls for available jobs
+match_job {
+  node_id: node_pubkey,
+  job_requirements: gpu_specs
+}
+
+// After completion
+submit_result {
+  job_id: job_pubkey,
+  result_hash: ipfs_hash,
+  execution_proof: performance_data
+}
+```
+
+#### 3. Payment Reception (hypernode-facilitator)
+
+Receive payments via x402 protocol:
+
+```rust
+// Payment automatically released after job verification
+claim_payment {
+  intent_id: payment_intent,
+  recipient: node_wallet
+}
+```
+
+### Smart Contract Addresses
+
+**Devnet:**
+- Nodes: (Deploy and configure in .env)
+- Jobs: (Deploy and configure in .env)
+- Staking: (Deploy and configure in .env)
+- Facilitator: (Deploy and configure in .env)
+
+**Token:**
+- HYPER (Devnet): `56jZUEMAhXxRu7Am3L2AkRRxNJb187zBbBQqnTf6jV75`
+- HYPER (Mainnet): `92s9qna3djkMncZzkacyNQ38UKnNXZFh4Jgqe3Cmpump`
+
+### Integration Requirements
+
+1. **Minimum Stake**: 100 HYPER tokens
+2. **Hardware Verification**: GPU specs submitted on registration
+3. **Uptime Requirement**: >95% for good reputation
+4. **Job Completion Rate**: >90% for priority matching
 
 ---
 
@@ -364,3 +462,4 @@ See [LICENSE](LICENSE) file for details.
 ---
 
 **Join the Hypernode network and start mining today!**
+
